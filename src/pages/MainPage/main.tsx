@@ -2,6 +2,7 @@ import {Layout} from 'antd';
 import {StyledHeader} from '../../global-styles';
 import {Task} from './components/task';
 import { useDrag, useDrop } from 'react-dnd';
+import { TaskGroup } from './components/task-group';
 
 export function MainPage() {
   const [{isDropping}, dragRef] = useDrop({
@@ -19,34 +20,15 @@ export function MainPage() {
       <StyledHeader>srgferger</StyledHeader>
       <Layout.Content>
         <div style={{display: 'flex', flexDirection: 'row', gap: '1rem'}}>
-          <Task
-            type="ready_to_development"
-            title="Сделать авторизацию и регистрацию на стороне бэкенда."
-            slug="TASK-5"
-            assigners={['Kirill Groshelev']}
-          />
+          <TaskGroup type="in_development" />
 
-          <Task
-            type="testing"
-            title="Реализовать аутентификацию на фронтенде."
-            slug="TASK-6"
-            assigners={['Kirill Groshelev']}
-          />
+          <TaskGroup type="error" />
 
-          <Task
-            type="error"
-            title="Ошибка: какого хуя меня нет в списке бэкендеров."
-            slug="TASK-7"
-            assigners={['Kirill Groshelev']}
-            comments={['frfr']}
-          />
+          <TaskGroup type="testing" />
 
-          <Task
-            type="in_development"
-            title="Сделать эти ебаные карточки нормально, а то хуйня получается пока что."
-            slug="TASK-8"
-            assigners={['Kirill Groshelev']}
-          />
+          <TaskGroup type="completed" />
+
+          <TaskGroup type="ready_to_development" />
 
           <div
             style={{

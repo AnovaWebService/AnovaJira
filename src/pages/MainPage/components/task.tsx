@@ -15,7 +15,6 @@ import {
 } from './styles';
 import {UserTag} from './user-tag';
 import { TransparentTag } from '../../../global-styles';
-import Draggable from 'react-draggable';
 import { useDrag } from 'react-dnd';
 
 type TaskProps = {

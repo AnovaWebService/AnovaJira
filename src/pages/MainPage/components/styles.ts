@@ -1,12 +1,20 @@
-import {Card, Space} from 'antd';
+import {Badge, Button, Card, Space} from 'antd';
 import {css, styled} from 'styled-components';
 
-const colors = {
-  in_development: '#D2E3FC',
-  ready_to_development: '#FEEFC3',
-  testing: '#CEEAD6',
-  error: '#FAD2CF',
-  completed: '#34A853',
+export const colors = {
+  in_development: '#D68FD6',
+  ready_to_development: '#E28413',
+  testing: '#E0B700',
+  error: '#FF7070',
+  completed: '#4DD179',
+};
+
+export const typeNames = {
+  in_development: 'В разработке',
+  ready_to_development: 'Готово к разработке',
+  testing: 'Тестирование',
+  error: 'Ошибка',
+  completed: 'Завершено',
 };
 
 const hoverEffectMask = css`
@@ -32,15 +40,21 @@ const fontFamily = css`
     'Segoe UI Symbol';
 `;
 
+export type TaskGroupType =
+  | 'in_development'
+  | 'ready_to_development'
+  | 'testing'
+  | 'completed'
+  | 'error';
+
 export type TTaskCard = {
-  type:
-    | 'in_development'
-    | 'ready_to_development'
-    | 'testing'
-    | 'completed'
-    | 'error';
+  type: TaskGroupType;
   disabled?: boolean;
   isDragging?: boolean;
+};
+
+export type TTaskGroup = {
+  type: TaskGroupType;
 };
 
 export const TaskCard = styled.div<TTaskCard>`
@@ -81,7 +95,7 @@ export const TaskTitleWrapper = styled(Space)`
 `;
 
 export const TaskCode = styled.p`
-  color: grey;
+  color: inherit;
   font-size: 0.8rem;
   margin: 0;
   ${fontFamily};
@@ -121,7 +135,7 @@ export const CommentButtonSmallWrapper = styled.div`
   border-radius: 10%;
   font-size: 1.02rem;
   gap: 0.2rem;
-  color: grey;
+  color: inherit;
 
   ${hoverEffectMask};
   ${fontFamily};
@@ -134,4 +148,39 @@ export const CommentButtonSmallWrapper = styled.div`
 export const Hoverable = styled.div`
   width: auto;
   ${hoverEffectMask};
+`;
+
+export const TaskGroupContainer = styled.div<TTaskGroup>`
+  display: flex;
+  flex-direction: column;
+  background-color: ${(props) =>
+    `color-mix(in srgb, ${colors[props.type]} 60%, black 30%)`};
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.3rem 0.5rem 0.3rem;
+  gap: 0.5rem;
+  color: white;
+`;
+
+export const GroupTypeTag = styled(Badge)`
+  background-color: rgba(255, 255, 255, 0.605);
+  padding: 0.2rem 0.5rem 0.2rem 0.5rem;
+  border-radius: 1rem;
+  color: white;
+
+  span {
+    color: white;
+  }
+`;
+
+export const GroupTypeTagContainer = styled.div<{type: TaskGroupType}>`
+  ${hoverEffectMask};
+  filter: brightness(95%);
+  border-radius: 1rem;
+  padding: 0.5rem;
+  align-items: center;
+`;
+
+export const GroupTaskCreateButton = styled(Button)`
+  text-align: start;
+  justify-content: start;
 `;
