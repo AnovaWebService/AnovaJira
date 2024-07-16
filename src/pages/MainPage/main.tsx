@@ -1,10 +1,10 @@
-import {Col, Layout, Row, Tabs} from 'antd';
+import {Layout, Tabs} from 'antd';
 import dayjs from 'dayjs';
+import {useMemo, useState} from 'react';
 
 import {StyledHeader} from '../../global-styles';
 import {TaskGroupType, TTask, TUser} from '../../types/types';
 import {TaskGroup} from './components/task-group';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const testUser: TUser = {
   id: 1,
@@ -124,21 +124,19 @@ function sortTasksByType(tasks) {
 
 export function MainPage() {
   const [tasks, setTasks] = useState<TTask[]>(testTasks);
-  const sortedTasks = sortTasksByType(tasks);
+  const sortedTasks = useMemo(() => sortTasksByType(tasks), [tasks]);
 
   const handleTaskAdd = (task: TTask, groupType: TaskGroupType) => {
     const tasksFiltered = tasks.filter(
       (_task) => _task.id !== task.id && _task.slug != task.slug,
     );
-    setTasks((prev) => [...tasksFiltered, {...task, type: groupType}]);
+    setTasks([...tasksFiltered, {...task, type: groupType}]);
   };
 
   const handleTaskDelete = (task: TTask) => {
     const tasksFiltered = tasks.filter((_task) => _task.id !== task.id);
     setTasks([...tasksFiltered]);
   };
-
-  useEffect(() => console.log(tasks), [tasks]);
 
   return (
     <Layout>
