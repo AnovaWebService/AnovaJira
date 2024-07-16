@@ -1,6 +1,9 @@
 import {CommentOutlined, SnippetsOutlined} from '@ant-design/icons';
-import {Space, Tag, Tooltip} from 'antd';
+import {Tooltip} from 'antd';
+import {useDrag} from 'react-dnd';
 
+import {TransparentTag} from '../../../global-styles';
+import {TTask} from '../../../types/types';
 import {
   CommentButtonSmallWrapper,
   Hoverable,
@@ -11,22 +14,13 @@ import {
   TaskTitle,
   TaskTitleWrapper,
   ToolbarContainer,
-  TTaskCard,
 } from './styles';
 import {UserTag} from './user-tag';
-import { TransparentTag } from '../../../global-styles';
-import { useDrag } from 'react-dnd';
 
-type TaskProps = {
-  readonly title: string;
-  readonly type: TTaskCard['type'];
-  readonly assigners: any[];
-  readonly slug: string;
-  readonly tags?: any[];
-  readonly comments?: any[];
-  readonly onClick?: (slug: string) => void;
-  readonly onDrag?: (slug: string) => void;
-};
+interface TaskProps extends TTask {
+  readonly onClick?: (task: TTask) => void;
+  readonly onDragComplete?: (task: TTask) => void;
+}
 
 function CommentButton({count}) {
   return (
@@ -40,16 +34,18 @@ function CommentButton({count}) {
 }
 
 export function Task({
+  id,
   title,
   type,
   assigners,
   slug,
   comments,
+  creator,
   onClick,
 }: TaskProps) {
   const [{isDragStart}, dragRef] = useDrag({
     type: 'task',
-    item: {slug},
+    item: () => ({id, title, type, assigners, slug, comments, creator}),
     collect: (monitor) => ({
       isDragStart: monitor.isDragging(),
     }),
@@ -58,7 +54,9 @@ export function Task({
   return (
     <TaskCard
       type={type}
-      onClick={() => onClick?.(slug)}
+      onClick={() =>
+        onClick?.({title, type, assigners, slug, comments, id, creator})
+      }
       ref={dragRef}
       isDragging={isDragStart}
     >
@@ -75,10 +73,10 @@ export function Task({
         <Tooltip title="Исполнитель" placement="left">
           {assigners.map((assigner) => (
             <UserTag
-              key={assigner}
-              firstName="Kirill"
-              lastName="Groshelev"
-              username="Sunday"
+              key={assigner.id}
+              firstName={assigner.first_name}
+              lastName={assigner.last_name}
+              username={assigner.username}
             />
           ))}
         </Tooltip>
@@ -95,7 +93,9 @@ export function Task({
       </TaskCardContentWrapper>
 
       <ToolbarContainer>
-        {!!comments && <CommentButton count={comments.length} />}
+        {!!comments && comments.length > 0 && (
+          <CommentButton count={comments.length} />
+        )}
       </ToolbarContainer>
     </TaskCard>
   );

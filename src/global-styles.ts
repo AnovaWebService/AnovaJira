@@ -1,4 +1,4 @@
-import {Button, Layout, Tag} from 'antd';
+import {Button, Layout, Tabs, Tag} from 'antd';
 import {createGlobalStyle, styled} from 'styled-components';
 
 import PoppinsBlack from './fonts/Poppins/Poppins-Regular.ttf';

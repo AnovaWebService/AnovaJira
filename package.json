@@ -12,6 +12,7 @@
   "dependencies": {
     "antd": "^5.19.1",
     "apollo": "^2.34.0",
+    "dayjs": "^1.11.11",
     "diff": "^5.2.0",
     "perfectionist": "^2.4.0",
     "prettier": "^3.3.3",

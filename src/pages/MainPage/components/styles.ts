@@ -1,5 +1,7 @@
-import {Badge, Button, Card, Space} from 'antd';
+import {Badge, Button, Space} from 'antd';
 import {css, styled} from 'styled-components';
+
+import {TaskGroupType} from '../../../types/types';
 
 export const colors = {
   in_development: '#D68FD6',
@@ -40,13 +42,6 @@ const fontFamily = css`
     'Segoe UI Symbol';
 `;
 
-export type TaskGroupType =
-  | 'in_development'
-  | 'ready_to_development'
-  | 'testing'
-  | 'completed'
-  | 'error';
-
 export type TTaskCard = {
   type: TaskGroupType;
   disabled?: boolean;
@@ -55,6 +50,7 @@ export type TTaskCard = {
 
 export type TTaskGroup = {
   type: TaskGroupType;
+  isTaskDropping?: boolean;
 };
 
 export const TaskCard = styled.div<TTaskCard>`
@@ -151,6 +147,7 @@ export const Hoverable = styled.div`
 `;
 
 export const TaskGroupContainer = styled.div<TTaskGroup>`
+  scale: 1;
   display: flex;
   flex-direction: column;
   background-color: ${(props) =>
@@ -159,6 +156,9 @@ export const TaskGroupContainer = styled.div<TTaskGroup>`
   padding: 0.5rem 0.3rem 0.5rem 0.3rem;
   gap: 0.5rem;
   color: white;
+  min-width: 20rem;
+  transition: scale 300ms;
+  ${(props) => !!props.isTaskDropping && 'scale: 1.05;'};
 `;
 
 export const GroupTypeTag = styled(Badge)`
