@@ -1,6 +1,8 @@
 import {CommentOutlined, SnippetsOutlined} from '@ant-design/icons';
-import {Space, Tag, Tooltip} from 'antd';
+import {Tooltip} from 'antd';
+import {useDrag} from 'react-dnd';
 
+import {TransparentTag} from '../../../global-styles';
 import {
   CommentButtonSmallWrapper,
   Hoverable,
@@ -14,8 +16,6 @@ import {
   TTaskCard,
 } from './styles';
 import {UserTag} from './user-tag';
-import { TransparentTag } from '../../../global-styles';
-import { useDrag } from 'react-dnd';
 
 type TaskProps = {
   readonly title: string;

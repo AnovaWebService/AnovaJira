@@ -1,8 +1,8 @@
 import {Layout} from 'antd';
+import {useDrop} from 'react-dnd';
+
 import {StyledHeader} from '../../global-styles';
-import {Task} from './components/task';
-import { useDrag, useDrop } from 'react-dnd';
-import { TaskGroup } from './components/task-group';
+import {TaskGroup} from './components/task-group';
 
 export function MainPage() {
   const [{isDropping}, dragRef] = useDrop({

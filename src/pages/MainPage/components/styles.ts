@@ -1,4 +1,4 @@
-import {Badge, Button, Card, Space} from 'antd';
+import {Badge, Button, Space} from 'antd';
 import {css, styled} from 'styled-components';
 
 export const colors = {

@@ -1,5 +1,6 @@
-import {Avatar, Space, Tooltip} from 'antd';
-import { UserTagContainer, UserTagName } from './styles';
+import {Avatar} from 'antd';
+
+import {UserTagContainer, UserTagName} from './styles';
 
 type UserTagProps = {
   readonly firstName: string;
@@ -17,7 +18,10 @@ export function UserTag({
 }: UserTagProps) {
   return (
     <UserTagContainer size="small" onClick={() => onClick(username)}>
-      <Avatar src={"https://variety.com/wp-content/uploads/2021/04/Avatar.jpg?w=800"} size={20}>
+      <Avatar
+        src="https://variety.com/wp-content/uploads/2021/04/Avatar.jpg?w=800"
+        size={20}
+      >
         {username.at(0)}
       </Avatar>
       <UserTagName>

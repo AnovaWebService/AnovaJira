@@ -1,5 +1,4 @@
 import {PlusOutlined} from '@ant-design/icons';
-import {Badge, Button} from 'antd';
 
 import {
   colors,
