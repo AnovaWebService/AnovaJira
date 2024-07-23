@@ -17,11 +17,19 @@ import {Task} from './task';
 type TaskGroupProps = {
   readonly type: TaskGroupType;
   readonly tasks: TTask[];
+  readonly onTaskClick?: (task: TTask) => void;
   readonly onTaskDelete?: (task: TTask) => void;
   readonly onTaskMove?: (task: TTask, groupType: TaskGroupType) => void;
+  readonly onTaskCreate?: () => void;
 };
 
-export function TaskGroup({type, tasks, onTaskMove}: TaskGroupProps) {
+export function TaskGroup({
+  type,
+  tasks,
+  onTaskMove,
+  onTaskClick,
+  onTaskCreate,
+}: TaskGroupProps) {
   const [{isDropping}, dropRef] = useDrop({
     accept: 'task',
     collect: (monitor) => ({
@@ -40,11 +48,15 @@ export function TaskGroup({type, tasks, onTaskMove}: TaskGroupProps) {
       </GroupTypeTagContainer>
 
       {tasks.map((task) => (
-        <Task key={task.id} {...task} />
+        <Task key={task.id} {...task} onClick={() => onTaskClick?.(task)} />
       ))}
 
       {!isDropping ? (
-        <GroupTaskCreateButton icon={<PlusOutlined />} type="text">
+        <GroupTaskCreateButton
+          icon={<PlusOutlined />}
+          type="text"
+          onClick={() => onTaskCreate()}
+        >
           Добавить
         </GroupTaskCreateButton>
       ) : (

@@ -2,11 +2,10 @@ import {CommentOutlined, SnippetsOutlined} from '@ant-design/icons';
 import {Tooltip} from 'antd';
 import {useDrag} from 'react-dnd';
 
-import {TransparentTag} from '../../../global-styles';
+import {Hoverable, TransparentTag} from '../../../global-styles';
 import {TTask} from '../../../types/types';
 import {
   CommentButtonSmallWrapper,
-  Hoverable,
   TaskCard,
   TaskCardContentWrapper,
   TaskCode,
@@ -18,7 +17,7 @@ import {
 import {UserTag} from './user-tag';
 
 interface TaskProps extends TTask {
-  readonly onClick?: (task: TTask) => void;
+  readonly onClick?: () => void;
   readonly onDragComplete?: (task: TTask) => void;
 }
 
@@ -54,9 +53,7 @@ export function Task({
   return (
     <TaskCard
       type={type}
-      onClick={() =>
-        onClick?.({title, type, assigners, slug, comments, id, creator})
-      }
+      onClick={() => onClick?.()}
       ref={dragRef}
       isDragging={isDragStart}
     >

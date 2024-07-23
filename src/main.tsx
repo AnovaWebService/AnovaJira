@@ -1,22 +1,31 @@
 import {App, ConfigProvider} from 'antd';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ru';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import updateLocale from 'dayjs/plugin/updateLocale';
 import React from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
 import ReactDOM from 'react-dom/client';
 
 import {darkTheme, lightTheme} from './config-provider';
-import {PoppinsFont} from './global-styles';
+import {PoppinsFont, styledDarkTheme} from './global-styles';
 import {ProjectRouter} from './router';
+import { ThemeProvider } from 'styled-components';
+import { ProjectThemeProvider } from './providers/project-theme-provider';
+
+dayjs.extend(relativeTime);
+dayjs.extend(updateLocale);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ConfigProvider theme={lightTheme}>
+    <ProjectThemeProvider>
       <App>
         <PoppinsFont />
         <DndProvider backend={HTML5Backend}>
           <ProjectRouter />
         </DndProvider>
       </App>
-    </ConfigProvider>
+    </ProjectThemeProvider>
   </React.StrictMode>,
 );

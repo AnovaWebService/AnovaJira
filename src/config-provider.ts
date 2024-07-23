@@ -12,6 +12,11 @@ export const darkTheme: ThemeConfig = {
     ...lightTheme.token,
     colorBgLayout: '#333333',
   },
-  components: {},
+  components: {
+    Input: {
+      activeBg: 'transparent',
+      hoverBg: 'transparent',
+    },
+  },
   algorithm: theme.darkAlgorithm,
 };

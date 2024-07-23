@@ -1,10 +1,12 @@
-import {Layout, Tabs} from 'antd';
+import {Layout, Switch, Tabs} from 'antd';
 import dayjs from 'dayjs';
 import {useMemo, useState} from 'react';
 
 import {StyledHeader} from '../../global-styles';
 import {TaskGroupType, TTask, TUser} from '../../types/types';
+import {TaskDrawer} from './components/task-drawer';
 import {TaskGroup} from './components/task-group';
+import { useThemeContext } from '../../hooks/use-theme-context';
 
 const testUser: TUser = {
   id: 1,
@@ -12,6 +14,7 @@ const testUser: TUser = {
   password: '1231232',
   first_name: 'Kirill',
   last_name: 'Groshelev',
+  avatar: 'https://variety.com/wp-content/uploads/2021/04/Avatar.jpg?w=800',
   date_joined: dayjs(),
 };
 
@@ -104,7 +107,22 @@ const testTasks: TTask[] = [
     slug: 'TASK-10',
     assigners: [testUser],
     creator: testUser,
-    comments: [],
+    comments: [
+      {
+        id: 1,
+        text: 'Текст очооооочень длинного комментария для просмотра каким будет уроливым данный компонент. Ну короче надо прям что-то длинное воткнуть. https://git.chilli-web.tech/',
+        creator: testUser,
+        task: null,
+        date_created: dayjs(),
+      },
+      {
+        id: 2,
+        text: 'Тестовый комментарий 2',
+        creator: testUser,
+        task: null,
+        date_created: dayjs(),
+      },
+    ],
   },
 ];
 
@@ -123,8 +141,12 @@ function sortTasksByType(tasks) {
 }
 
 export function MainPage() {
+  const [drawerOpened, setDrawerOpened] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState(null);
   const [tasks, setTasks] = useState<TTask[]>(testTasks);
+
   const sortedTasks = useMemo(() => sortTasksByType(tasks), [tasks]);
+  const setTheme = useThemeContext();
 
   const handleTaskAdd = (task: TTask, groupType: TaskGroupType) => {
     const tasksFiltered = tasks.filter(
@@ -138,9 +160,25 @@ export function MainPage() {
     setTasks([...tasksFiltered]);
   };
 
+  const handleTaskCreateMode = () => {
+    setTaskToEdit(null);
+    setDrawerOpened(true);
+  };
+
+  const handleTaskEditMode = (task: TTask) => {
+    setTaskToEdit(task);
+    setDrawerOpened(true);
+  };
+
+  const handleThemeSwitch = (checked: boolean) => {
+    setTheme(!!checked ? 'dark' : 'light');
+  };
+
   return (
     <Layout>
-      <StyledHeader>srgferger</StyledHeader>
+      <StyledHeader>
+        <Switch onChange={handleThemeSwitch} />
+      </StyledHeader>
       <Layout.Content>
         <Tabs size="middle">
           <Tabs.TabPane tab="Фамилия" key={0} />
@@ -159,12 +197,19 @@ export function MainPage() {
               key={type}
               type={type as any}
               tasks={tasks}
+              onTaskClick={(task) => handleTaskEditMode(task)}
               onTaskMove={handleTaskAdd}
               onTaskDelete={handleTaskDelete}
+              onTaskCreate={handleTaskCreateMode}
             />
           ))}
         </div>
       </Layout.Content>
+      <TaskDrawer
+        task={taskToEdit}
+        open={drawerOpened}
+        onClose={() => setDrawerOpened(false)}
+      />
     </Layout>
   );
 }

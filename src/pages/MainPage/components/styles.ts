@@ -1,6 +1,12 @@
-import {Badge, Button, Space} from 'antd';
-import {css, styled} from 'styled-components';
+import {Badge, Button, Input, Select, Space, Steps} from 'antd';
+import {CSSProperties} from 'react';
+import {styled} from 'styled-components';
 
+import {
+  colorTransition,
+  fontFamily,
+  hoverEffectMask,
+} from '../../../global-styles';
 import {TaskGroupType} from '../../../types/types';
 
 export const colors = {
@@ -18,29 +24,6 @@ export const typeNames = {
   error: 'Ошибка',
   completed: 'Завершено',
 };
-
-const hoverEffectMask = css`
-  background-color: transparent;
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.07);
-  }
-`;
-
-const fontFamily = css`
-  font-family:
-    ui-sans-serif,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI Variable Display',
-    'Segoe UI',
-    Helvetica,
-    'Apple Color Emoji',
-    Arial,
-    sans-serif,
-    'Segoe UI Emoji',
-    'Segoe UI Symbol';
-`;
 
 export type TTaskCard = {
   type: TaskGroupType;
@@ -64,6 +47,7 @@ export const TaskCard = styled.div<TTaskCard>`
   max-width: 20rem;
   transition: opacity 300ms;
   opacity: ${(props) => (!!props.isDragging ? '0.5' : '1')};
+  touch-action: none;
 
   &:hover {
     filter: brightness(93%);
@@ -97,11 +81,11 @@ export const TaskCode = styled.p`
   ${fontFamily};
 `;
 
-export const UserTagContainer = styled(Space)`
+export const UserTagContainer = styled(Space)<{unfocusable?: boolean}>`
   border-radius: 0.5rem;
   padding: 0.3rem;
 
-  ${hoverEffectMask}
+  ${(props) => !props.unfocusable && hoverEffectMask}
 `;
 
 export const UserTagName = styled.p`
@@ -141,11 +125,6 @@ export const CommentButtonSmallWrapper = styled.div`
   }
 `;
 
-export const Hoverable = styled.div`
-  width: auto;
-  ${hoverEffectMask};
-`;
-
 export const TaskGroupContainer = styled.div<TTaskGroup>`
   scale: 1;
   display: flex;
@@ -156,13 +135,14 @@ export const TaskGroupContainer = styled.div<TTaskGroup>`
   padding: 0.5rem 0.3rem 0.5rem 0.3rem;
   gap: 0.5rem;
   color: white;
+  height: auto;
   min-width: 20rem;
   transition: scale 300ms;
   ${(props) => !!props.isTaskDropping && 'scale: 1.05;'};
 `;
 
 export const GroupTypeTag = styled(Badge)`
-  background-color: rgba(255, 255, 255, 0.605);
+  background-color: ${(props) => props.theme.taskTypeTagBg};
   padding: 0.2rem 0.5rem 0.2rem 0.5rem;
   border-radius: 1rem;
   color: white;
@@ -170,17 +150,106 @@ export const GroupTypeTag = styled(Badge)`
   span {
     color: white;
   }
+
+  ${colorTransition}
 `;
 
 export const GroupTypeTagContainer = styled.div<{type: TaskGroupType}>`
   ${hoverEffectMask};
   filter: brightness(95%);
   border-radius: 1rem;
-  padding: 0.5rem;
+  padding: 0.2rem;
   align-items: center;
 `;
 
 export const GroupTaskCreateButton = styled(Button)`
   text-align: start;
   justify-content: start;
+`;
+
+export const DrawerTaskTitle = styled(Input.TextArea)<{error?: boolean}>`
+  border: none;
+  background: transparent;
+  background-color: transparent;
+  box-shadow: none;
+  box-sizing: none;
+  font-size: 1.7rem;
+  font-weight: bold;
+  transition: color 300ms;
+  color: ${(props) => (!!props.error ? 'red' : 'inherit')};
+
+  &::placeholder {
+    transition: color 300ms;
+    ${(props) => !!props.error && 'color: #F97681;'};
+  }
+
+  &:focus-within {
+    box-shadow: none;
+    border-color: transparent;
+  }
+`;
+
+export const DrawerTaskDescription = styled(Input.TextArea)`
+  border: none;
+  background: transparent;
+  background-color: transparent;
+  box-shadow: none;
+  box-sizing: none;
+  font-size: 1.1rem;
+
+  &:focus-within {
+    box-shadow: none;
+    border-color: transparent;
+  }
+`;
+
+export const DrawerTypeSelect = styled(Select)`
+  &,
+  .ant-select-selector {
+    padding: 0 !important;
+    border: none !important;
+    border-color: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    box-sizing: none !important;
+  }
+
+  .ant-select-arrow {
+    display: none;
+  }
+
+  option {
+    width: 100%;
+  }
+`;
+
+export const DrawerDescriptionsItemContainer = styled.div`
+  padding: 0.2rem;
+`;
+
+export const CommentListComponent = styled(Steps)`
+  margin-inline-end: 0;
+
+  .ant-steps-item,
+  .ant-steps-item-icon {
+    margin-inline-end: 0.5rem !important;
+  }
+
+  .ant-steps-item-tail::after {
+    background-color: rgba(5, 5, 5, 0.3) !important;
+  }
+`;
+
+export const AssignersSelect = styled(Select)`
+  .ant-select-selector {
+    padding-inline: 0 !important;
+    padding-block: 0 !important;
+    width: 10rem !important;
+  }
+`;
+
+export const AssignersSelectGroup = styled(Select.OptGroup)`
+  .ant-select-dropdown.ant-select-item-option-grouped {
+    padding-inline-start: 0.5rem !important;
+  }
 `;
