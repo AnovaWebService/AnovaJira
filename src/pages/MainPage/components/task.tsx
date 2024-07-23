@@ -4,6 +4,7 @@ import {useDrag} from 'react-dnd';
 
 import {Hoverable, TransparentTag} from '../../../global-styles';
 import {TTask} from '../../../types/types';
+
 import {
   CommentButtonSmallWrapper,
   TaskCard,

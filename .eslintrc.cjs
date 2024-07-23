@@ -106,7 +106,7 @@ module.exports = {
     'no-console': 'warn',
 
     'perfectionist/sort-named-imports': 'warn',
-    'perfectionist/sort-imports': ['warn',{
+    'perfectionist/sort-imports': ['warn', {
       groups: [
         ['builtin', 'external'],
         ['type','internal-type','parent-type', 'sibling-type', 'index-type'],

@@ -1,5 +1,6 @@
-import {Avatar, Space, Tooltip} from 'antd';
-import { UserTagContainer, UserTagName } from './styles';
+import {Avatar} from 'antd';
+
+import {UserTagContainer, UserTagName} from './styles';
 
 type UserTagProps = {
   readonly firstName: string;
