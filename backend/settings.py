@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve()
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Ссылка на подключение к БД
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///main.sqlite3")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://kirill:1234@localhost:5433/anovatasks")
 
 # Флаг отладки
 DEBUG = bool(os.getenv("DEBUG", True))

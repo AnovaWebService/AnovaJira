@@ -419,7 +419,7 @@ class Task(
     )
 
     title = ormar.String(
-        max_length=250,
+        max_length=100,
         nullable=False,
     )
 
@@ -484,6 +484,7 @@ class Comment(
         nullable=False,
         on_delete=ormar.ReferentialAction.CASCADE,
         on_update=ormar.ReferentialAction.CASCADE,
+        related_name="comments",
     )
 
     text = ormar.Text(
@@ -501,8 +502,5 @@ class Comment(
         nullable=False,
         on_delete=ormar.ReferentialAction.CASCADE,
         on_update=ormar.ReferentialAction.CASCADE,
+        related_name="comments",
     )
-
-
-metadata.drop_all(bind=engine)
-metadata.create_all(bind=engine)
