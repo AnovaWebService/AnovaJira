@@ -56,8 +56,10 @@ async def register_user_endpoint(form_data: serializers.UserRegistrationSerializ
     if await check_for_username_availability(form_data.username):
         raise exceptions.USER_ALREADY_REGISTERED_EXCEPTION
 
+    password = auth.create_password_hash(form_data.password)
     return await models.User.objects.create(
-        **form_data.model_dump()
+        **form_data.model_dump(),
+        password=password,
     )
 
 

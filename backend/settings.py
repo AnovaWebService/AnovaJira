@@ -15,7 +15,7 @@ DEBUG = bool(os.getenv("DEBUG", True))
 
 # Данные, по которым будет работать бекенд.
 HOST = os.getenv("HOST", "0.0.0.0")  # noqa: S104
-PORT = int(os.getenv("PORT", 8080))  # noqa: PLW1508
+PORT = int(os.getenv("PORT", 8081))  # noqa: PLW1508
 
 # Секретный ключ проекта, для хеширования паролей, и так же их валидации
 SECRET_KEY = os.getenv("SECRET_KEY", "d9847115-9b80-4f47-ba09-be5539325d0a")

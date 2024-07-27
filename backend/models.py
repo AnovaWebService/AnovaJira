@@ -1,11 +1,11 @@
 import enum
+import typing
 import urllib.request
 from datetime import datetime
 
 import databases
 import ormar
 import sqlalchemy
-from sqlalchemy_utils import create_database, database_exists
 
 import mixins
 import settings
@@ -52,11 +52,17 @@ class CommentStatuses(enum.Enum):
 
 class Permission(IdentifiedMixin, ormar.Model):
     """
-    Модель разрешения на рабочее пространство или доску задач
+    Модель разрешения
     """
 
     ormar_config = ormar_config.copy(
         tablename="permissions",
+    )
+
+    code = ormar.String(
+        max_length=30,
+        nullable=False,
+        unique=True,
     )
 
     instance_class = ormar.String(
@@ -64,14 +70,27 @@ class Permission(IdentifiedMixin, ormar.Model):
         nullable=False,
     )
 
+
+class IPermission(IdentifiedMixin, ormar.Model):
+    """
+    Модель разрешения на конкретный объект бд.
+    """
+
+    ormar_config = ormar_config.copy(
+        tablename="i_permissions",
+    )
+
+    permission = ormar.ForeignKey(
+        to=Permission,
+        nullable=False,
+        on_delete=ormar.ReferentialAction.CASCADE,
+        on_update=ormar.ReferentialAction.CASCADE,
+        related_name="instance_permissions",
+    )
+
     instance_id = ormar.BigInteger(
         nullable=True,
         minimum=1,
-    )
-
-    code = ormar.String(
-        max_length=20,
-        nullable=False,
     )
 
 
@@ -81,7 +100,7 @@ class ResolvableMixin:
     """
 
     permissions = ormar.ManyToMany(
-        to=Permission,
+        to=IPermission,
         unique=True,
     )
 
@@ -92,15 +111,22 @@ class PermissionTargetMixin(IdentifiedMixin):
     """
 
     @classmethod
+    async def _get_permission(cls, code: str):
+        return await Permission.objects.get(
+            code=code,
+        )
+
+    @classmethod
     async def give_global_permission(
         cls,
         resolvable: ResolvableMixin,
         permission_code: str,
     ):
-        model_permission, is_created = await Permission.objects.get_or_create(
-            code=permission_code,
-            instance_id=None,
-            instance_name=cls.__name__,
+        permission = await cls._get_permission(permission_code)
+
+        model_permission, _ = await IPermission.objects.get_or_create(
+            permission=permission,
+            instance_id__isnull=True,
         )
 
         await resolvable.permissions.add(model_permission)
@@ -111,22 +137,27 @@ class PermissionTargetMixin(IdentifiedMixin):
         resolvable: ResolvableMixin,
         permission_code: str,
     ):
-        return await resolvable.permissions.delete(
-            each=True,
-            permissions__name=permission_code,
-            instance_name=cls.__name__,
+        permission = await IPermission.objects.get_or_none(
+            permission__code=permission_code,
+            permission__instance_name=cls.__name__,
             instance_id__isnull=True,
         )
+
+        if not permission:
+            return None
+
+        return await resolvable.permissions.remove(permission, keep_reversed=True)
 
     async def give_permission(
         self,
         resolvable: ResolvableMixin,
         permission_code: str,
     ):
-        object_permission, is_created = await Permission.objects.get_or_create(
-            code=permission_code,
+        permission = await self._get_permission(permission_code)
+
+        object_permission, _ = await IPermission.objects.get_or_create(
+            permission=permission,
             instance_id=self.id,
-            instance_name=self.__class__.__name__,
         )
 
         await resolvable.permissions.add(object_permission)
@@ -137,26 +168,30 @@ class PermissionTargetMixin(IdentifiedMixin):
         permission_code: str,
     ):
         return await resolvable.permissions.filter(
-            permissions__name=permission_code,
-            instance_name=self.__class__.__name__,
+            permission__code=permission_code,
+            permission__instance_name=self.__class__.__name__,
             instance_id=self.id,
-        ).exists() or resolvable.permissions.filter(
-            permissions__name=permission_code,
-            instance_name=self.__class__.__name__,
+        ).exists() or await resolvable.permissions.filter(
+            permission__code=permission_code,
+            permission__instance_name=self.__class__.__name__,
             instance_id__isnull=True,
-        )
+        ).exists()
 
     async def remove_permission(
         self,
         resolvable: ResolvableMixin,
         permission_code: str,
     ):
-        return await resolvable.permissions.delete(
-            each=True,
-            permissions__name=permission_code,
-            instance_name=self.__class__.__name__,
+        instance_permission = await IPermission.objects.get_or_none(
+            permission__code=permission_code,
+            permission__instance_name=self.__class__.__name__,
             instance_id=self.id,
         )
+
+        if not instance_permission:
+            return None
+
+        return await resolvable.permissions.remove(instance_permission, keep_reversed=True)
 
 
 class User(mixins.PartialMixin, ormar.Model):
@@ -187,8 +222,6 @@ class User(mixins.PartialMixin, ormar.Model):
 
     password = ormar.Text(
         nullable=False,
-        encrypt_secret=settings.SECRET_KEY,
-        encrypt_backend=ormar.EncryptBackends.HASH,
     )
 
     email = ormar.Text(
@@ -224,6 +257,15 @@ class Workspace(
 ):
     """
     Модель рабочего пространства БД
+    Разрешения:
+        update_workspace,
+        create_boards,
+        setup_color_theme,
+        setup_background_image,
+        invite_participants,
+        manage_invitations,
+        manage_roles,
+        kick_participants,
     """
 
     ormar_config = ormar_config.copy(
@@ -242,6 +284,15 @@ class Workspace(
         nullable=False
     )
 
+    permissions: typing.ClassVar = [
+        "update_workspace",
+        "create_boards",
+        "invite_participants",
+        "manage_invitations",
+        "manage_roles",
+        "kick_participants",
+    ]
+
 
 class Board(
     mixins.PartialMixin,
@@ -250,6 +301,20 @@ class Board(
 ):
     """
     Модель доски задач рабочего пространства БД
+    Разрешения:
+        update_boards,
+        delete_boards,
+        manage_participants,
+        remove_tasks,
+        create_tasks,
+        update_tasks,
+        delete_groups,
+        create_groups,
+        update_groups,
+        leave_comments,
+        manage_comments,
+        delete_foreign_comments,
+        update_foreign_comments,
     """
 
     ormar_config = ormar_config.copy(
@@ -275,6 +340,22 @@ class Board(
         default="TASK"
     )
 
+    permissions: typing.ClassVar = [
+        "update_boards",
+        "delete_boards",
+        "manage_participants",
+        "remove_tasks",
+        "create_tasks",
+        "update_tasks",
+        "delete_groups",
+        "create_groups",
+        "update_groups",
+        "leave_comments",
+        "manage_comments",
+        "delete_foreign_comments",
+        "update_foreign_comments",
+    ]
+
 
 class TaskGroup(
     IdentifiedMixin,
@@ -286,7 +367,7 @@ class TaskGroup(
     """
 
     ormar_config = ormar_config.copy(
-        tablename="board_groups",
+        tablename="t_groups",
     )
 
     title = ormar.String(
@@ -300,22 +381,16 @@ class TaskGroup(
         regex=r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
     )
 
-    workspace = ormar.ForeignKey(
-        to=Workspace,
-        nullable=False,
-        on_delete=ormar.ReferentialAction.CASCADE,
-        on_update=ormar.ReferentialAction.CASCADE,
-    )
-
     board = ormar.ForeignKey(
         to=Board,
         nullable=False,
         on_delete=ormar.ReferentialAction.CASCADE,
         on_update=ormar.ReferentialAction.CASCADE,
+        related_name="groups"
     )
 
 
-class WorkspaceRole(
+class Role(
     mixins.PartialMixin,
     PermissionTargetMixin,
     ResolvableMixin,
@@ -355,7 +430,7 @@ class WorkspaceRole(
     )
 
 
-class WorkspaceUser(
+class Participant(
     IdentifiedMixin,
     mixins.PartialMixin,
     ormar.Model,
@@ -365,7 +440,7 @@ class WorkspaceUser(
     """
 
     ormar_config = ormar_config.copy(
-        tablename="workspace_users",
+        tablename="participants",
     )
 
     workspace = ormar.ForeignKey(
@@ -381,16 +456,23 @@ class WorkspaceUser(
         nullable=False,
         on_delete=ormar.ReferentialAction.CASCADE,
         on_update=ormar.ReferentialAction.CASCADE,
-        related_name="workspace_users",
+        related_name="participants",
     )
 
     role = ormar.ForeignKey(
-        to=WorkspaceRole,
+        to=Role,
         nullable=False,
         on_delete=ormar.ReferentialAction.RESTRICT,
         on_update=ormar.ReferentialAction.CASCADE,
-        related_name="workspace_users",
+        related_name="participants",
     )
+
+    @classmethod
+    async def get_for_workspace(cls, workspace, user):
+        return await cls.objects.get_or_none(
+            workspace=workspace,
+            user=user
+        )
 
 
 class Task(
@@ -404,13 +486,6 @@ class Task(
 
     ormar_config = ormar_config.copy(
         tablename="tasks",
-    )
-
-    id = ormar.BigInteger(
-        nullable=True,
-        primary_key=True,
-        autoincrement=True,
-        minimum=1,
     )
 
     slug = ormar.String(
@@ -433,13 +508,13 @@ class Task(
     )
 
     assigners = ormar.ManyToMany(
-        to=WorkspaceUser,
+        to=Participant,
         unique=True,
         related_name="tasks"
     )
 
     creator = ormar.ForeignKey(
-        to=WorkspaceUser,
+        to=Participant,
         nullable=False,
         on_delete=ormar.ReferentialAction.CASCADE,
         on_update=ormar.ReferentialAction.CASCADE,
@@ -480,7 +555,7 @@ class Comment(
     )
 
     creator = ormar.ForeignKey(
-        to=WorkspaceUser,
+        to=Participant,
         nullable=False,
         on_delete=ormar.ReferentialAction.CASCADE,
         on_update=ormar.ReferentialAction.CASCADE,
@@ -491,10 +566,11 @@ class Comment(
         nullable=False,
     )
 
-    status = ormar.Enum(
-        enum_class=CommentStatuses,
+    status = ormar.String(
+        max_length=50,
+        choices=list(CommentStatuses),
         nullable=False,
-        default=CommentStatuses.OPEN,
+        default=CommentStatuses.OPEN.value,
     )
 
     task = ormar.ForeignKey(
@@ -503,4 +579,15 @@ class Comment(
         on_delete=ormar.ReferentialAction.CASCADE,
         on_update=ormar.ReferentialAction.CASCADE,
         related_name="comments",
+    )
+
+    date_created = ormar.DateTime(
+        default=datetime.now,
+        timezone=True,
+        nullable=False,
+    )
+
+    date_modified = ormar.DateTime(
+        nullable=True,
+        timezone=True,
     )

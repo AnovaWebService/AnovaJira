@@ -2,28 +2,61 @@ import ormar
 
 import models
 
-ALL_WORKSPACE_PERMISSIONS = [
-    "boards__create_board",
-    "workspace__setup_user_theme",
-    "workspace__invite_people",
-    "workspace__kick_people",
-    "workspace__manage_roles",
-    "workspace__"
-]
+roles = {
+    "Участник": {
+        "create_tasks",
+        "update_tasks",
+        "leave_comments",
+    },
+    "Модератор": {
+        "create_tasks",
+        "update_tasks",
+        "leave_comments",
+        "manage_invitations",
+        "manage_comments",
+        "delete_foreign_comments",
+        "update_foreign_comments",
+    },
+    "Администратор": {
+        "create_tasks",
+        "update_tasks",
+        "leave_comments",
+        "manage_invitations",
+        "manage_comments",
+        "delete_foreign_comments",
+        "update_foreign_comments",
+        "create_groups",
+        "update_groups",
+        "delete_groups",
+        "create_boards",
+        "update_boards",
+        "delete_boards",
+    },
+    "Супер-админ": {
+        "create_tasks",
+        "update_tasks",
+        "leave_comments",
+        "manage_comments",
+        "delete_foreign_comments",
+        "update_foreign_comments",
+        "create_groups",
+        "update_groups",
+        "delete_groups",
+        "create_boards",
+        "update_boards",
+        "delete_boards",
+        "update_workspace",
+        "invite_participants",
+        "manage_invitations",
+        "manage_roles",
+        "kick_participants",
+    }
 
-DEFAULT_USER_PERMISSIONS = [
-    "boards__create_board",
-    "boards__update_board",
-    "boards__delete_board",
-    "boards__update_workspace",
-    "workspace__setup_user_theme",
-    "workspace__invite_people",
-    "workspace__kick_people"
-]
+}
 
 
 @ormar.pre_update(models.User)
-async def reset_user_email_confirmation(_, instance: models.User, **kwargs):
+async def reset_user_email_confirmation(sender, instance: models.User, **kwargs):  # noqa: ARG001
     """
     Сбрасывает флаг email_verified, если почта пользователя была изменена.
     """
@@ -34,15 +67,27 @@ async def reset_user_email_confirmation(_, instance: models.User, **kwargs):
 
 
 @ormar.post_save(models.Workspace)
-async def initialize_workspace_permissions(_, instance: models.Workspace):
-    await models.WorkspaceRole.objects.create(
-        name="Участник",
-        workspace=instance
-    )
+async def initialize_workspace_permissions(sender, instance: models.Workspace, **kwargs):  # noqa: ARG001
+    for role, permissions in roles.items():
+        role_created = await models.Role.objects.create(
+            name=role,
+            workspace=instance,
+            permissions=[
+                await models.IPermission.objects.create(
+                    permission=(
+                        await models.Permission.objects.get(
+                            code=code
+                        )
+                    ),
+                    instance_id=None,
+                ) for code in permissions
+            ]
+        )
+        print(role_created, sep='\n\n')
 
 
 @ormar.post_save(models.Task)
-async def generate_task_id(_, instance: models.Task):
+async def generate_task_id(_, instance: models.Task, **kwargs):  # noqa: ARG001
     ticker_count = await models.Task.objects.filter(
         group__board__workspace__id=instance.group.board.workspace.id,
     ).count() or 0 + 1
