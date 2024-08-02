@@ -122,6 +122,9 @@ async def reset_user_email_confirmation(sender, instance: models.User, passed_ar
 
 @ormar.post_save(models.Workspace)
 async def initialize_workspace_permissions(sender, instance: models.Workspace, **kwargs):  # noqa: ARG001
+    """
+    Описание сигнала
+    """
     for role, permissions in roles.items():
         role_created = await models.Role.objects.create(
             name=role,
