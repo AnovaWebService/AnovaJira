@@ -10,12 +10,12 @@ def authorized_only(func):
             for key, value in dict(info.context.get("request", {}).get("headers", {})).items()
         }
 
-        auth_header = headers.get("Authorization", "")
+        auth_header = headers.get("authorization", "")
         if not auth_header:
             raise exceptions.NOT_AUTHORIZED
 
         auth_token = auth_header.split(" ")[1]
-        current_user = get_current_user(auth_token)
+        current_user = await get_current_user(auth_token)
 
         return await func(root, info, current_user, *args, **kwargs)
 

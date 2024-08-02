@@ -1,5 +1,4 @@
 import graphene
-import graphene_pydantic
 
 import models
 
@@ -35,46 +34,41 @@ class Permission(OrmarMixin, graphene.ObjectType):
     Модель разрешения
     """
 
-    id = graphene.Field(graphene.Int())
-    code = graphene.Field(graphene.String())
+    id = graphene.Field(graphene.Int)
+    code = graphene.Field(graphene.String)
 
 
-class IPermission(OrmarMixin, graphene_pydantic.PydanticObjectType):
+class IPermission(OrmarMixin, graphene.ObjectType):
     """
     Модель разрешения на объект
     """
 
-    permission = graphene.Field(Permission)
+    id = graphene.Field(
+        graphene.ID
+    )
+    permission = graphene.Field(
+        Permission
+    )
+    instance_id = graphene.Field(
+        graphene.ID
+    )
 
-    class Meta:
-        model = models.IPermission.get_pydantic(
-            include={
-                "id",
-                "instance_class",
-                "instance_id",
-            }
-        )
 
-
-class User(OrmarMixin, graphene_pydantic.PydanticObjectType):
+class User(OrmarMixin, graphene.ObjectType):
     """
     Модель пользователя graphql
     """
 
-    class Meta:
-        model = models.User.get_pydantic(
-            include={
-                "id",
-                "username",
-                "avatar",
-                "password",
-                "email",
-                "first_name",
-                "last_name",
-                "email_verified",
-                "date_joined",
-            }
-        )
+    id = graphene.Field(graphene.ID)
+    avatar = graphene.Field(graphene.String)
+    password = graphene.Field(graphene.String)
+    email = graphene.Field(graphene.String)
+    first_name = graphene.Field(graphene.String)
+    last_name = graphene.Field(graphene.String)
+    email_verified = graphene.Field(graphene.Boolean)
+    date_joined = graphene.Field(
+        graphene.DateTime
+    )
 
 
 class Workspace(OrmarMixin, graphene.ObjectType):
@@ -103,38 +97,42 @@ class WorkspaceUpdate(graphene.InputObjectType):
     title = graphene.InputField(graphene.String, required=True)
 
 
-class Role(OrmarMixin, graphene_pydantic.PydanticObjectType):
+class Role(OrmarMixin, graphene.ObjectType):
     """
     Модель роли рабочего пространства graphql_service
     """
 
-    permissions = graphene.Field(graphene.List(IPermission))
-    workspace = graphene.Field(Workspace)
+    id = graphene.Field(
+        graphene.NonNull(graphene.ID)
+    )
+    name = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+    for_user = graphene.Field(
+        graphene.Boolean
+    )
+    permissions = graphene.Field(
+        graphene.List(IPermission)
+    )
+    workspace = graphene.Field(
+        Workspace
+    )
 
-    class Meta:
-        model = models.Role.get_pydantic(
-            include={
-                "id",
-                "name",
-                "for_user",
-            }
-        )
 
-
-class RoleInput(graphene_pydantic.PydanticInputObjectType):
+class RoleInput(graphene.InputObjectType):
     """
     Модель для создания и редактирования роли рабочего пространства
     """
 
-    permissions = graphene.Field(graphene.List(IPermission))
-
-    class Meta:
-        model = models.Role.get_pydantic(
-            exclude={
-                "id",
-                "workspace",
-            }
-        )
+    name = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+    for_user = graphene.Field(
+        graphene.Boolean
+    )
+    permissions = graphene.Field(
+        graphene.List(IPermission)
+    )
 
 
 class Participant(OrmarMixin, graphene.ObjectType):
@@ -142,6 +140,7 @@ class Participant(OrmarMixin, graphene.ObjectType):
     Модель участника рабочего пространства
     """
 
+    id = graphene.Field(graphene.ID)
     workspace = graphene.Field(Workspace)
     user = graphene.Field(User)
     role = graphene.Field(Role)
@@ -196,94 +195,187 @@ class BoardUpdate(graphene.InputObjectType):
     )
 
 
-class TaskGroup(OrmarMixin, graphene_pydantic.PydanticObjectType):
+class TaskGroup(OrmarMixin, graphene.ObjectType):
     """
     Модель группы задач доски
     """
 
+    id = graphene.Field(
+        graphene.NonNull(graphene.ID)
+    )
+    title = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+    color = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
     board = graphene.Field(Board)
 
-    class Meta:
-        model = models.TaskGroup.get_pydantic(
-            include={
-                "id",
-                "title",
-                "color",
-            }
-        )
+
+class TaskGroupCreate(graphene.InputObjectType):
+    title = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+    color = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+    board_id = graphene.Field(
+        graphene.NonNull(graphene.ID)
+    )
 
 
-class Task(OrmarMixin, graphene_pydantic.PydanticObjectType):
+class TaskGroupUpdate(graphene.InputObjectType):
+    id = graphene.Field(
+        graphene.NonNull(graphene.ID)
+    )
+    title = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+    color = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+
+
+class Task(OrmarMixin, graphene.ObjectType):
     """
     Модель задачи graphql
     """
 
+    id = graphene.Field(
+        graphene.NonNull(graphene.ID)
+    )
+    slug = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+    title = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+    description = graphene.Field(
+        graphene.String
+    )
+    branch = graphene.Field(
+        graphene.String
+    )
+    date_created = graphene.Field(
+        graphene.NonNull(graphene.DateTime)
+    )
+    date_ending = graphene.Field(
+        graphene.DateTime
+    )
     assigners = graphene.Field(
         graphene.List(Participant)
     )
-    group = graphene.Field(TaskGroup)
-    creator = graphene.Field(Participant)
-
-    class Meta:
-        model = models.Task.get_pydantic(
-            include={
-                "id",
-                "slug",
-                "title",
-                "description",
-                "branch",
-                "date_created",
-                "date_ending",
-            }
-        )
+    group = graphene.Field(
+        graphene.NonNull(TaskGroup)
+    )
+    creator = graphene.Field(
+        graphene.NonNull(Participant)
+    )
 
 
-class Comment(OrmarMixin, graphene_pydantic.PydanticObjectType):
+class Comment(OrmarMixin, graphene.ObjectType):
     """
-    Модель комментария задачи graphql_service
+    Модель комментария к задачам graphql
     """
 
-    creator = graphene.Field(Participant)
-    task = graphene.Field(Task)
+    id = graphene.Field(
+        graphene.NonNull(graphene.ID)
+    )
+    text = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+    status = graphene.Field(
+        graphene.NonNull(graphene.Int)
+    )
+    date_created = graphene.Field(
+        graphene.NonNull(graphene.DateTime)
+    )
+    date_modified = graphene.Field(
+        graphene.DateTime
+    )
+    creator = graphene.Field(
+        graphene.NonNull(Participant)
+    )
+    task = graphene.Field(
+        graphene.NonNull(Task)
+    )
 
-    class Meta:
-        model = models.Comment.get_pydantic(
-            include={
-                "id",
-                "text",
-                "status",
-                "date_created",
-                "date_modified",
-            }
-        )
 
-
-class CommentInput(graphene_pydantic.PydanticInputObjectType):
+class CommentCreate(graphene.InputObjectType):
     """
-    Модель для создания и редактирования комментариев к задачам.
+    Модель для создания комментариев к задачам.
     """
 
-    class Meta:
-        model = models.Comment.get_pydantic(
-            exclude={
-                "id",
-                "task",
-                "creator",
-            }
-        )
+    text = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+
+    task_id = graphene.Field(
+        graphene.NonNull(graphene.ID)
+    )
 
 
-class TaskInput(graphene_pydantic.PydanticInputObjectType):
+class CommentUpdate(graphene.InputObjectType):
+    """
+    Модель для редактирования комментариев к задачам.
+    """
+
+    id = graphene.Field(
+        graphene.NonNull(graphene.ID)
+    )
+    text = graphene.Field(
+        graphene.NonNull(graphene.String)
+    )
+
+
+class CommentManage(graphene.InputObjectType):
+    """
+    Модель для редактирования комментариев к задачам.
+    """
+
+    id = graphene.Field(
+        graphene.NonNull(graphene.ID)
+    )
+    status = graphene.Field(
+        graphene.NonNull(graphene.Int)
+    )
+
+
+class TaskCreate(graphene.InputObjectType):
     """
     Модель для создания и редактирования задач.
     """
 
-    class Meta:
-        model = models.Task.get_pydantic(
-            exclude={
-                "id",
-                "slug",
-                "creator",
-                "date_created",
-            }
-        )
+    title = graphene.InputField(
+        graphene.NonNull(graphene.String)
+    )
+
+    description = graphene.InputField(
+        graphene.String
+    )
+
+    branch = graphene.InputField(
+        graphene.String
+    )
+
+    assigners_id = graphene.InputField(
+        graphene.List(graphene.ID)
+    )
+
+    group_id = graphene.InputField(
+        graphene.NonNull(graphene.ID)
+    )
+
+    date_ending = graphene.InputField(
+        graphene.DateTime
+    )
+
+
+class TaskUpdate(TaskCreate):
+    """
+    Модель для редактирования задачи
+    """
+
+    id = graphene.InputField(
+        graphene.NonNull(graphene.ID)
+    )

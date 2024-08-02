@@ -1,8 +1,7 @@
 import graphene
 
-import models
-
-from . import mutations, subscriptions, types
+from . import mutations, subscriptions
+from .query import Query
 
 
 class Subscription(
@@ -11,6 +10,7 @@ class Subscription(
     subscriptions.BoardSubscription,
     subscriptions.RoleSubscription,
     subscriptions.CommentsSubscription,
+    subscriptions.PermissionSubscription,
     graphene.ObjectType,
 ):
     """
@@ -28,40 +28,16 @@ class Mutation(graphene.ObjectType):
     create_board = mutations.BoardCreateMutation.Field()
     update_board = mutations.BoardUpdateMutation.Field()
     delete_board = mutations.BoardDeleteMutation.Field()
-
-
-class Query(graphene.ObjectType):
-    """
-    Все доступные запросы
-    """
-
-    workspaces = graphene.List(types.Workspace)
-    roles = graphene.List(types.Role, workspace_id=graphene.Int())
-    boards = graphene.List(types.Board, workspace_id=graphene.Int())
-    comments = graphene.List(types.Board, task_id=graphene.Int())
-    tasks = graphene.List(types.Board, board_id=graphene.Int())
-
-    @staticmethod
-    async def resolve_workspaces(root, info):
-        return await models.Workspace.objects.all()
-
-    @staticmethod
-    async def resolve_roles(root, info, workspace_id: int):
-        return await models.Role.objects.filter(workspace__id=workspace_id).all()
-
-    @staticmethod
-    async def resolve_boards(root, info, workspace_id: int):
-        return await models.Board.objects.filter(workspace__id=workspace_id).all()
-
-    @staticmethod
-    async def resolve_comments(root, info, task_id: int):
-        return await models.Comment.objects.filter(task__id=task_id).all()
-
-    @staticmethod
-    async def resolve_tasks(root, info, board_id: int):
-        return await models.Task.objects.filter(
-            group__board__id=board_id,
-        )
+    create_group = mutations.TaskGroupCreateMutation.Field()
+    update_group = mutations.TaskGroupUpdateMutation.Field()
+    delete_group = mutations.TaskGroupDeleteMutation.Field()
+    create_task = mutations.TaskCreateMutation.Field()
+    update_task = mutations.TaskUpdateMutation.Field()
+    # delete_task = mutations.TaskDeleteMutation.Field()
+    create_comment = mutations.CommentCreateMutation.Field()
+    update_comment = mutations.CommentUpdateMutation.Field()
+    manage_comment = mutations.CommentManageMutation.Field()
+    delete_comment = mutations.CommentDeleteMutation.Field()
 
 
 schema = graphene.Schema(
@@ -69,4 +45,3 @@ schema = graphene.Schema(
     mutation=Mutation,
     query=Query
 )
-

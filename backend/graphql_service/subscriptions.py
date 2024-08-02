@@ -4,8 +4,9 @@ import graphene
 
 import models
 
-from . import types
+from . import exceptions, types
 from .decorators import authorized_only
+from .query import Query
 
 DELAY = 1
 
@@ -29,19 +30,20 @@ class WorkspaceSubscription:
     async def subscribe_workspace(_, __, user, workspace_id: str):
         while True:
             await asyncio.sleep(DELAY)
-            yield await models.Workspace.objects.get_or_none(
+            workspace = await models.Workspace.objects.get_or_none(
                 id=int(workspace_id),
                 participants__user=user,
             )
+            if not workspace:
+                raise exceptions.WORKSPACE_NOT_FOUND
+            yield workspace
 
     @staticmethod
     @authorized_only
-    async def subscribe_workspaces(_, __, user):
+    async def subscribe_workspaces(root, info, user):
         while True:
             await asyncio.sleep(DELAY)
-            yield await models.Workspace.objects.filter(
-                participants__user=user,
-            ).all()
+            yield await Query.resolve_workspaces(root, info, user)
 
 
 class CommentsSubscription:
@@ -69,20 +71,16 @@ class CommentsSubscription:
                 task__group__board__workspace__participants__user=user,
             )
             if not comment:
-                message = "Запрашиваемый Вами комментарий не найден!"
-                raise ValueError(message)
+                raise exceptions.COMMENT_NOT_FOUND
 
             yield comment
 
     @staticmethod
     @authorized_only
-    async def subscribe_comments(_, __, user, task_id: int):
+    async def subscribe_comments(root, info, user, task_id: int):
         while True:
             await asyncio.sleep(DELAY)
-            yield await models.Comment.objects.filter(
-                task__id=int(task_id),
-                task__group__board__workspace__participants__user=user,
-            ).all()
+            yield await Query.resolve_comments(root, info, user, task_id)
 
 
 class RoleSubscription:
@@ -111,20 +109,16 @@ class RoleSubscription:
             )
 
             if not role:
-                message = "Запрашиваемая Вами роль не найдена."
-                raise ValueError(message)
+                raise exceptions.ROLE_NOT_FOUND
 
             yield role
 
     @staticmethod
     @authorized_only
-    async def subscribe_roles(_, __, user, workspace_id: int):
+    async def subscribe_roles(root, info, user, workspace_id: int):
         while True:
             await asyncio.sleep(DELAY)
-            yield await models.Role.objects.filter(
-                workspace__id=int(workspace_id),
-                workspace__participants__user=user,
-            ).all()
+            yield await Query.resolve_roles(root, info, user, workspace_id)
 
 
 class TaskSubscription:
@@ -144,7 +138,7 @@ class TaskSubscription:
 
     @staticmethod
     @authorized_only
-    async def subscribe_task(_, __, user, task_id: str):
+    async def subscribe_task(_, __, user, task_id: int):
         while True:
             await asyncio.sleep(DELAY)
             task = await models.Task.objects.get_or_none(
@@ -160,13 +154,10 @@ class TaskSubscription:
 
     @staticmethod
     @authorized_only
-    async def subscribe_tasks(_, __, user, board_id: str):
+    async def subscribe_tasks(root, info, user, board_id: int):
         while True:
             await asyncio.sleep(DELAY)
-            yield await models.Role.objects.filter(
-                group__board__id=int(board_id),
-                group__board__workspace__participants__user=user,
-            ).all()
+            yield await Query.resolve_tasks(root, info, user, board_id)
 
 
 class BoardSubscription:
@@ -186,7 +177,7 @@ class BoardSubscription:
 
     @staticmethod
     @authorized_only
-    async def subscribe_board(_, __, user, board_id: str):
+    async def subscribe_board(_, __, user, board_id: int):
         while True:
             await asyncio.sleep(DELAY)
             board = await models.Board.objects.get_or_none(
@@ -195,17 +186,25 @@ class BoardSubscription:
             )
 
             if not board:
-                message = "Запрашиваемая Вами доска заданий не найдена."
-                raise ValueError(message)
+                raise exceptions.BOARD_NOT_FOUND
 
             yield board
 
     @staticmethod
     @authorized_only
-    async def subscribe_boards(_, __, user, workspace_id: str):
+    async def subscribe_boards(root, info, user, workspace_id: int):
         while True:
             await asyncio.sleep(DELAY)
-            yield await models.Board.objects.filter(
-                workspace__id=int(workspace_id),
-                workspace__participants__user=user,
-            ).all()
+            yield await Query.resolve_boards(root, info, user, workspace_id)
+
+
+class PermissionSubscription:
+    permissions = graphene.Field(
+        graphene.List(types.IPermission),
+        workspace_id=graphene.NonNull(graphene.ID),
+    )
+
+    @staticmethod
+    @authorized_only
+    async def subscribe_permissions(root, info, user, workspace_id: int):
+        yield await Query.resolve_permissions(root, info, user, workspace_id)

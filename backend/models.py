@@ -21,7 +21,7 @@ ormar_config = ormar.OrmarConfig(
 )
 
 
-async def get_user_default_avatar():
+def get_user_default_avatar():
     random_seed = datetime.now().timestamp()
     url = f"https://api.dicebear.com/7.x/miniavs/svg?seed={random_seed}"
 
@@ -71,7 +71,32 @@ class Permission(IdentifiedMixin, ormar.Model):
     )
 
 
-class IPermission(IdentifiedMixin, ormar.Model):
+class IPermissionQuerySet(ormar.QuerySet):
+    def filter_for_participant(self, participant: ormar.Model):
+        return self.filter(
+            roles__participants__id=participant.pk,
+        )
+
+    def filter_for_board(self, board: ormar.Model):
+        return self.filter(
+            roles__participants__workspace__board__id=board.pk,
+            permission__instance_class="Board",
+        )
+
+    def filter_for_workspace(self, workspace: ormar.Model):
+        return self.filter(
+            roles__participants__workspace__id=workspace.pk,
+            permission__intance_class="Workspace",
+        )
+
+
+class IPermissionMetaClass(ormar.models.newbasemodel.ModelMetaclass, type):
+    @property
+    def objects(cls):  # noqa: N805
+        return IPermissionQuerySet(model_cls=cls)
+
+
+class IPermission(IdentifiedMixin, ormar.Model, metaclass=IPermissionMetaClass):
     """
     Модель разрешения на конкретный объект бд.
     """
@@ -92,6 +117,13 @@ class IPermission(IdentifiedMixin, ormar.Model):
         nullable=True,
         minimum=1,
     )
+
+    @classmethod
+    def get_for_instance(cls, instance: ormar.Model):
+        return cls.objects.filter(
+            permission__instance_class=instance.__class__.__name__,
+            instance_id=instance.pk,
+        )
 
 
 class ResolvableMixin:
@@ -139,7 +171,7 @@ class PermissionTargetMixin(IdentifiedMixin):
     ):
         permission = await IPermission.objects.get_or_none(
             permission__code=permission_code,
-            permission__instance_name=cls.__name__,
+            permission__instance_class=cls.__name__,
             instance_id__isnull=True,
         )
 
@@ -169,11 +201,11 @@ class PermissionTargetMixin(IdentifiedMixin):
     ):
         return await resolvable.permissions.filter(
             permission__code=permission_code,
-            permission__instance_name=self.__class__.__name__,
+            permission__instance_class=self.__class__.__name__,
             instance_id=self.id,
         ).exists() or await resolvable.permissions.filter(
             permission__code=permission_code,
-            permission__instance_name=self.__class__.__name__,
+            permission__instance_class=self.__class__.__name__,
             instance_id__isnull=True,
         ).exists()
 
@@ -184,7 +216,7 @@ class PermissionTargetMixin(IdentifiedMixin):
     ):
         instance_permission = await IPermission.objects.get_or_none(
             permission__code=permission_code,
-            permission__instance_name=self.__class__.__name__,
+            permission__instance_class=self.__class__.__name__,
             instance_id=self.id,
         )
 
@@ -210,11 +242,6 @@ class User(mixins.PartialMixin, ormar.Model):
         minimum=1,
     )
 
-    username = ormar.String(
-        max_length=100,
-        nullable=False,
-    )
-
     avatar = ormar.Text(
         nullable=False,
         default=get_user_default_avatar,
@@ -227,6 +254,7 @@ class User(mixins.PartialMixin, ormar.Model):
     email = ormar.Text(
         regex=r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
         nullable=False,
+        unique=True,
     )
 
     first_name = ormar.String(
@@ -257,15 +285,6 @@ class Workspace(
 ):
     """
     Модель рабочего пространства БД
-    Разрешения:
-        update_workspace,
-        create_boards,
-        setup_color_theme,
-        setup_background_image,
-        invite_participants,
-        manage_invitations,
-        manage_roles,
-        kick_participants,
     """
 
     ormar_config = ormar_config.copy(
@@ -301,20 +320,6 @@ class Board(
 ):
     """
     Модель доски задач рабочего пространства БД
-    Разрешения:
-        update_boards,
-        delete_boards,
-        manage_participants,
-        remove_tasks,
-        create_tasks,
-        update_tasks,
-        delete_groups,
-        create_groups,
-        update_groups,
-        leave_comments,
-        manage_comments,
-        delete_foreign_comments,
-        update_foreign_comments,
     """
 
     ormar_config = ormar_config.copy(
@@ -341,12 +346,14 @@ class Board(
     )
 
     permissions: typing.ClassVar = [
-        "update_boards",
-        "delete_boards",
-        "manage_participants",
-        "remove_tasks",
+        "view_board",
+        "update_board",
+        "delete_board",
+        "manage_board_participants",
+        "delete_tasks",
         "create_tasks",
         "update_tasks",
+        "reassign_tasks",
         "delete_groups",
         "create_groups",
         "update_groups",

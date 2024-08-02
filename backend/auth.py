@@ -1,7 +1,7 @@
 import base64
 import hashlib
 import hmac
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Annotated
 
 import jwt
@@ -20,8 +20,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token")
 
 
-async def get_user(username: str):
-    return await models.User.objects.get_or_none(username=username)
+async def get_user(email: str):
+    return await models.User.objects.get_or_none(email=email)
 
 
 def create_password_hash(password: str):
@@ -35,8 +35,8 @@ def verify_password(plain_password: str, hashed_password: str):
     return hmac.compare_digest(new_hash, hashed_password)
 
 
-async def authenticate_user(username: str, password: str):
-    user = await get_user(username=username)
+async def authenticate_user(email: str, password: str):
+    user = await get_user(email=email)
     if not user:
         return False
 
@@ -49,9 +49,9 @@ async def authenticate_user(username: str, password: str):
 def create_access_token(user: dict, data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(tz=settings.TIMEZONE) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(tz=settings.TIMEZONE) + timedelta(minutes=15)
 
     to_encode.update({"exp": expire})
     return jwt.encode(
@@ -67,21 +67,21 @@ def create_access_token(user: dict, data: dict, expires_delta: timedelta | None 
 def check_user_auth(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
         payload = jwt.decode(token, SECRET, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        email: str = payload.get("sub")
 
-        if username is None:
+        if email is None:
             raise exceptions.INCORRECT_LOGIN_DATA_EXCEPTION
 
     except jwt.exceptions.PyJWTError:
         raise exceptions.INCORRECT_LOGIN_DATA_EXCEPTION  # noqa: B904
 
-    return username
+    return email
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    username = check_user_auth(token)
+    email = check_user_auth(token)
 
-    user = await get_user(username=username)
+    user = await get_user(email=email)
     if user is None:
         raise exceptions.INCORRECT_LOGIN_DATA_EXCEPTION
 
@@ -90,7 +90,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
 def create_token(user: models.User):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    data = {"sub": user.username}
+    data = {"sub": user.email}
     access_token = create_access_token(
         user=user.model_dump(exclude={"date_joined"}),
         data=data,

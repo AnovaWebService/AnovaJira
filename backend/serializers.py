@@ -1,10 +1,26 @@
-class UserRegistrationSerializer:
-    pass
+import pydantic
+
+import models
+
+UserRegistrationSerializer = models.User.get_pydantic(
+    include={
+        "email",
+        "first_name",
+        "last_name",
+        "password",
+    }
+)
 
 
-class UserPasswordChangeSerializer:
-    pass
+class UserPasswordChangeSerializer(pydantic.BaseModel):
+    old_password: str
+    new_password: str
 
 
-class UserUpdateSerializer:
-    pass
+UserUpdateSerializer = models.User.get_pydantic_partial(
+    include={
+        "email",
+        "first_name",
+        "last_name",
+    }
+)

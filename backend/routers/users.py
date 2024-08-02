@@ -14,8 +14,8 @@ router = fastapi.APIRouter(
 )
 
 
-async def check_for_username_availability(username: str):
-    result_check = await models.User.objects.filter(username=username).exists()
+async def check_for_username_availability(email: str):
+    result_check = await models.User.objects.filter(email=email).exists()
     return bool(result_check)
 
 
@@ -56,20 +56,18 @@ async def register_user_endpoint(form_data: serializers.UserRegistrationSerializ
     if await check_for_username_availability(form_data.username):
         raise exceptions.USER_ALREADY_REGISTERED_EXCEPTION
 
-    password = auth.create_password_hash(form_data.password)
     return await models.User.objects.create(
         **form_data.model_dump(),
-        password=password,
     )
 
 
-@router.post("/registration/username/{username}/", name="Проверка username на регистрацию")
-async def validate_registration_email_endpoint(username: str):
+@router.post("/registration/email/{email}/", name="Проверка email на регистрацию")
+async def validate_registration_email_endpoint(email: str):
     """
     Проверка username на его занятость другим пользователем.
     Данная функция нужна для валидации поля username на клиенте.
     """
-    if not await check_for_username_availability(username):
+    if not await check_for_username_availability(email):
         return {"detail": False}
 
     return {"detail": True}

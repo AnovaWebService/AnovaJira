@@ -10,5 +10,31 @@ WORKSPACE_ROLE_MANAGE_NOT_PERMITTED = Exception("Вы не можете реда
 
 BOARD_NOT_FOUND = Exception("Запрашиваемая Вами доска задач не была найдена.")
 BOARD_ALREADY_EXISTS = Exception("Доска задач с таким именем уже существует.")
+BOARD_VIEW_NOT_PERMITTED = Exception("Вы не являетесь участником данной доски задач.")
 BOARD_UPDATE_NOT_PERMITTED = Exception("У Вас нет прав на редактирование данных данной доски задач.")
 BOARD_DELETE_NOT_PERMITTED = Exception("У Вас нет прав на удаление данной доски задач.")
+
+COMMENT_NOT_FOUND = Exception("Запрашиваемый Вами комментарий не был найден!")
+COMMENT_UPDATE_NOT_PERMITTED = Exception("У Вас нет прав на редактирование комментариев на данной доске задач.")
+COMMENT_CREATE_NOT_PERMITTED = Exception("У Вас нет прав на добавление комментариев на данной доске задач.")
+COMMENT_MANAGE_NOT_PERMITTED = Exception("У Вас нет прав на ведения прогресса по комментариям на данной доске задач")
+COMMENT_DELETE_NOT_PERMITTED = Exception("У Вас нет прав на удаление комментариев на данной доске задач.")
+
+ROLE_NOT_FOUND = Exception("Запрашиваемая Вами роль не была найдена.")
+ROLE_UPDATE_NOT_PERMITTED = Exception("У Вас нет прав на редактирование данной роли.")
+ROLE_CREATE_NOT_PERMITTED = Exception("У Вас нет прав на создание ролей в данном рабочем пространстве.")
+ROLE_DELETE_NOT_PERMITTED = Exception("У Вас нет прав на удаление данной роли.")
+ROLE_DELETE_UNDELETABLE = Exception("Данную роль невозможно удалить.")
+ROLE_ASSIGN_NOT_PERMITTED = Exception("У Вас нет прав на назначение данной роли участникам рабочего пространства.")
+
+TASK_GROUP_NOT_FOUND = Exception("Запрашиваемая Вами группа задач не найдена.")
+TASK_GROUP_ALREADY_EXISTS = Exception("Группа с таким названием уже существует на данной доске задач.")
+TASK_GROUP_UPDATE_NOT_PERMITTED = Exception("У Вас нет прав на редактирование групп задач на данной доске.")
+TASK_GROUP_CREATE_NOT_PERMITTED = Exception("У Вас нет прав на создание групп задач на данной доске.")
+TASK_GROUP_DELETE_NOT_PERMITTED = Exception("У Вас нет прав на удаление групп задач на данной доске")
+
+TASK_NOT_FOUND = Exception("Запрашиваемая Вами задача не была найдена.")
+TASK_CREATE_NOT_PERMITTED = Exception("У Вас нет прав на создание задач на данной доске.")
+TASK_UPDATE_NOT_PERMITTED = Exception("У Вас нет прав на редактирование задач на данной доске.")
+TASK_DELETE_NOT_PERMITTED = Exception("У Вас нет прав на удаление задач на данной доске.")
+TASK_ASSIGN_NOT_PERMITTED = Exception("У Вас нет прав на переназначение задач на данной доске.")
